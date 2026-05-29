@@ -1,9 +1,7 @@
 using UnityEngine;
 
-namespace Other
-{
-    public class KnockBack : MonoBehaviour
-    {
+namespace Other {
+    public class KnockBack : MonoBehaviour {
         [SerializeField]
         private float _knockBackForce = 3f;
 
@@ -16,33 +14,36 @@ namespace Other
 
         public bool IsGettingKnockedBack { get; private set; }
 
-        private void Awake()
-        {
+        private void Awake() {
             rb = GetComponent<Rigidbody2D>();
         }
 
-        private void Update()
-        {
+        private void Update() {
+            // Исправлено: используем свойство IsGettingKnockedBack, а не _isGettingKnockedBack
+            if (Player.Instance == null || Player.Instance.IsDead) {
+                IsGettingKnockedBack = false;
+                return;
+            }
+
             if (!IsGettingKnockedBack)
                 return;
+
             _knockBackMovingTimer -= Time.deltaTime;
-            if (_knockBackMovingTimer <= 0)
-            {
+            if (_knockBackMovingTimer <= 0) {
                 StopKnockBackMovement();
             }
         }
 
-        public void GetKnockedBack(Transform damageSource)
-        {
+        public void GetKnockedBack(Transform damageSource) {
+            if (Player.Instance == null || Player.Instance.IsDead) return;
+
             IsGettingKnockedBack = true;
             _knockBackMovingTimer = _knockBackMovingTimerMax;
-            Vector2 difference =
-                (transform.position - damageSource.position).normalized * _knockBackForce / rb.mass;
+            Vector2 difference = (transform.position - damageSource.position).normalized * _knockBackForce / rb.mass;
             rb.AddForce(difference, ForceMode2D.Impulse);
         }
 
-        public void StopKnockBackMovement()
-        {
+        public void StopKnockBackMovement() {
             rb.linearVelocity = Vector2.zero;
             IsGettingKnockedBack = false;
         }

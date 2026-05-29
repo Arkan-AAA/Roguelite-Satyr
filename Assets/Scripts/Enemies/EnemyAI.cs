@@ -3,69 +3,86 @@ using Enemies;
 using Other;
 using Satyr.Utils;
 using UnityEngine;
-using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
 public class EnemyAI : MonoBehaviour {
     [SerializeField]
-    private State _startingState;
+    protected State _startingState;  // private → protected
 
     [SerializeField]
-    private float _roamingDistanceMax = 7f;
+    protected float _roamingDistanceMax = 7f;
 
     [SerializeField]
-    private float _roamingDistanceMin = 3f;
+    protected float _roamingDistanceMin = 3f;
 
     [SerializeField]
-    private float _roamingTimerMax = 2f;
+    protected float _roamingTimerMax = 2f;
 
     [SerializeField]
-    private float _chaseRange = 8f;
+    protected float _chaseRange = 8f;
 
     [SerializeField]
-    private float _attackRange = 2f;
+    protected float _attackRange = 2f;
 
     [SerializeField]
-    private float _attackCooldown = 1.2f;
+    protected float _attackCooldown = 1.2f;
 
     [SerializeField]
-    private int _attackDamage = 10;
+    protected int _attackDamage = 10;
 
     [SerializeField]
-    private float _roamAnimSpeed = 1f;
+    protected float _roamAnimSpeed = 1f;
 
     [SerializeField]
-    private float _chaseAnimSpeed = 1.5f;
+    protected float _chaseAnimSpeed = 1.5f;
+
+    [SerializeField]
+    protected float _moveSpeed = 3.5f;
+
+    [Header("Obstacle Avoidance")]
+    [SerializeField]
+    protected float _rayDistance = 1.2f;
+
+    [SerializeField]
+    protected float _avoidForce = 2f;
+
+    [SerializeField]
+    protected LayerMask _obstacleLayer;
+
+    [Header("Layers")]
+    [SerializeField]
+    protected LayerMask _enemyLayer;  // новый слой для атак
 
 #if UNITY_EDITOR
     [Header("Debug")]
     [SerializeField]
     private bool _isChasingEnemy;
-
     [SerializeField]
     private bool _isAttackingEnemy;
 #endif
 
     public event EventHandler OnFlashBlink;
 
-    private NavMeshAgent _navMeshAgent;
-    private State state;
-    private float roamingTime;
-    private Vector3 roamPosition;
-    private Vector3 startingPosition;
-    private Animator animator;
+    protected Rigidbody2D _rb;
+    protected State state;
+    protected float roamingTime;
+    protected Vector3 roamPosition;
+    protected Vector3 startingPosition;
+    protected Animator animator;
+    protected bool _isDead;
 
-    private const string IS_MOVING = "IsMoving";
-    private const string IS_CHASING = "IsChasing";
-    private const string ATTACK = "Attack";
-    private const string HIT = "Hit";
-    private const string DEATH = "Death";
+    protected const string IS_MOVING = "IsMoving";
+    protected const string IS_CHASING = "IsChasing";
+    protected const string ATTACK = "Attack";
+    protected const string HIT = "Hit";
+    protected const string DEATH = "Death";
 
-    private float _attackTimer;
-    private EnemyEntity _enemyEntity;
-    private KnockBack _knockBack;
+    protected float _attackTimer;
+    protected EnemyEntity _enemyEntity;
+    protected KnockBack _knockBack;
+    protected Transform _player;
 
-    private enum State {
+    protected enum State {
         Idle,
         Roaming,
         Chasing,
@@ -73,14 +90,11 @@ public class EnemyAI : MonoBehaviour {
         Death,
     }
 
-    private void Awake() {
-        _navMeshAgent = GetComponent<NavMeshAgent>();
-        _navMeshAgent.updateUpAxis = false;
-        _navMeshAgent.updateRotation = false;
-
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-            rb.freezeRotation = true;
+    protected virtual void Awake() {
+        _rb = GetComponent<Rigidbody2D>();
+        if (_rb != null) {
+            _rb.freezeRotation = true;
+        }
 
         state = _startingState;
         roamingTime = Random.Range(0f, _roamingTimerMax);
@@ -88,20 +102,26 @@ public class EnemyAI : MonoBehaviour {
         animator = GetComponentInChildren<Animator>();
     }
 
-    private void Start() {
+    protected virtual void Start() {
         startingPosition = transform.position;
 
         _enemyEntity = GetComponent<EnemyEntity>();
         _knockBack = GetComponent<KnockBack>();
-        _enemyEntity.OnHit += OnHit;
-        _enemyEntity.OnDeath += OnDeath;
+        _player = Player.Instance?.transform;
+
+        if (_enemyEntity != null) {
+            _enemyEntity.OnHit += OnHit;
+            _enemyEntity.OnDeath += OnDeath;
+        }
     }
 
-    private void Update() {
-        if (Player.Instance == null)
-            return;
+    protected virtual void Update() {
+        if (Player.Instance == null || Player.Instance.IsDead) return;
+        if (_player == null) _player = Player.Instance?.transform;
+        if (_player == null) return;
+
         if (_knockBack != null && _knockBack.IsGettingKnockedBack) {
-            _navMeshAgent.ResetPath();
+            _rb.linearVelocity = Vector2.zero;
             return;
         }
 
@@ -114,13 +134,10 @@ public class EnemyAI : MonoBehaviour {
         }
 #endif
 
-        bool isMoving = _navMeshAgent.velocity.magnitude > 0.1f;
-        animator.SetBool(IS_MOVING, isMoving);
+        float distToPlayer = Vector3.Distance(transform.position, _player.position);
 
-        float distToPlayer = Vector3.Distance(
-            transform.position,
-            Player.Instance.transform.position
-        );
+        bool isMoving = _rb.linearVelocity.magnitude > 0.1f;
+        if (animator != null) animator.SetBool(IS_MOVING, isMoving);
 
         switch (state) {
             case State.Idle:
@@ -129,8 +146,9 @@ public class EnemyAI : MonoBehaviour {
                     break;
                 }
                 roamingTime -= Time.deltaTime;
-                if (roamingTime < 0)
+                if (roamingTime < 0) {
                     Roaming();
+                }
                 break;
 
             case State.Roaming:
@@ -138,32 +156,21 @@ public class EnemyAI : MonoBehaviour {
                     state = State.Chasing;
                     break;
                 }
-                if (!_navMeshAgent.pathPending && _navMeshAgent.remainingDistance < 0.2f) {
+                if (Vector3.Distance(transform.position, roamPosition) < 0.3f) {
                     state = State.Idle;
                     roamingTime = Random.Range(1f, _roamingTimerMax);
+                    _rb.linearVelocity = Vector2.zero;
                 }
                 break;
 
             case State.Chasing:
-                if (distToPlayer > _chaseRange) {
-                    state = State.Roaming;
-                    Roaming();
-                    break;
-                }
-                if (distToPlayer < _attackRange) {
-                    state = State.Attacking;
-                    _navMeshAgent.ResetPath();
-                    _attackTimer = 0f;
-                    break;
-                }
-                _navMeshAgent.SetDestination(Player.Instance.transform.position);
-                ChangeFacingDirection(transform.position, Player.Instance.transform.position);
+                HandleChasing();
                 break;
 
             case State.Attacking:
                 _attackTimer -= Time.deltaTime;
                 if (_attackTimer <= 0f) {
-                    animator.SetTrigger(ATTACK);
+                    if (animator != null) animator.SetTrigger(ATTACK);
                     _attackTimer = _attackCooldown;
                 }
                 if (distToPlayer > _attackRange) {
@@ -172,68 +179,120 @@ public class EnemyAI : MonoBehaviour {
                 break;
 
             case State.Death:
+                _rb.linearVelocity = Vector2.zero;
                 break;
         }
 
         bool isChasing = state == State.Chasing;
-        animator.SetBool(IS_CHASING, isChasing);
-        animator.speed = isChasing ? _chaseAnimSpeed : _roamAnimSpeed;
+        if (animator != null) {
+            animator.SetBool(IS_CHASING, isChasing);
+            animator.speed = isChasing ? _chaseAnimSpeed : _roamAnimSpeed;
+        }
     }
 
-    private void OnHit() => animator.SetTrigger(HIT);
+    protected virtual void HandleChasing() {
+        float distToPlayer = Vector3.Distance(transform.position, _player.position);
 
-    private void OnDestroy() {
+        if (distToPlayer > _chaseRange) {
+            state = State.Roaming;
+            Roaming();
+            return;
+        }
+
+        if (distToPlayer < _attackRange) {
+            state = State.Attacking;
+            _rb.linearVelocity = Vector2.zero;
+            _attackTimer = 0f;
+            return;
+        }
+
+        Vector2 direction = (_player.position - transform.position).normalized;
+        Vector2 avoidance = GetAvoidanceVector();
+        Vector2 finalVelocity = (direction + avoidance) * _moveSpeed;
+        _rb.linearVelocity = finalVelocity;
+        ChangeFacingDirection(transform.position, _player.position);
+    }
+
+    protected virtual Vector2 GetAvoidanceVector() {
+        Vector2 avoidance = Vector2.zero;
+        Vector2 forward = _rb.linearVelocity.normalized;
+        if (forward == Vector2.zero) forward = transform.right;
+
+        Vector2[] directions = { forward, Quaternion.Euler(0, 0, 45) * forward, Quaternion.Euler(0, 0, -45) * forward };
+
+        foreach (Vector2 dir in directions) {
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, _rayDistance, _obstacleLayer);
+            if (hit.collider != null) {
+                Vector2 avoidDir = Vector2.Perpendicular(hit.normal).normalized;
+                avoidance += avoidDir * _avoidForce;
+            }
+        }
+        return avoidance;
+    }
+
+    protected virtual void OnHit() {
+        if (animator != null) animator.SetTrigger(HIT);
+        OnFlashBlink?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected virtual void OnDestroy() {
         if (_enemyEntity != null) {
             _enemyEntity.OnHit -= OnHit;
             _enemyEntity.OnDeath -= OnDeath;
         }
     }
 
-    private void OnDeath() {
+    protected virtual void OnDeath() {
+        _isDead = true;
         state = State.Death;
-        _navMeshAgent.ResetPath();
-        animator.SetTrigger(DEATH);
+        _rb.linearVelocity = Vector2.zero;
+        if (animator != null) animator.SetTrigger(DEATH);
         foreach (var col in GetComponents<Collider2D>())
             col.enabled = false;
     }
 
-    public void DealDamage() {
-        if (Player.Instance == null)
-            return;
+    public virtual void DealDamage() {
+        if (Player.Instance == null || Player.Instance.IsDead) return;
+
         float dist = Vector3.Distance(transform.position, Player.Instance.transform.position);
         if (dist < _attackRange) {
             Player.Instance.TakeDamage(transform, _attackDamage);
         }
     }
 
-    public void DestroyEnemy() {
+    public virtual void DestroyEnemy() {
         Destroy(gameObject);
     }
 
-    private void Roaming() {
+    protected virtual void Roaming() {
         roamPosition = GetRoamingPosition();
-        _navMeshAgent.SetDestination(roamPosition);
-        ChangeFacingDirection(startingPosition, roamPosition);
+        Vector2 direction = (roamPosition - transform.position).normalized;
+        _rb.linearVelocity = direction * _moveSpeed;
+        ChangeFacingDirection(transform.position, roamPosition);
         roamingTime = Random.Range(1f, 3f);
     }
 
-    private Vector3 GetRoamingPosition() {
-        Vector3 randomDirection =
-            Utils.GetRandomDir() * Random.Range(_roamingDistanceMin, _roamingDistanceMax);
-        Vector3 targetPosition = startingPosition + randomDirection;
-
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(targetPosition, out hit, 2f, NavMesh.AllAreas)) {
-            return hit.position;
-        }
-
-        return transform.position;
+    protected virtual Vector3 GetRoamingPosition() {
+        Vector2 randomDir = Utils.GetRandomDir() * Random.Range(_roamingDistanceMin, _roamingDistanceMax);
+        return startingPosition + (Vector3)randomDir;
     }
 
-    private void ChangeFacingDirection(Vector3 sourcePosition, Vector3 targetPosition) {
-        transform.rotation =
-            targetPosition.x < sourcePosition.x
-                ? Quaternion.Euler(0f, 180f, 0f)
-                : Quaternion.Euler(0f, 0f, 0f);
+    protected virtual void ChangeFacingDirection(Vector3 sourcePosition, Vector3 targetPosition) {
+        transform.rotation = targetPosition.x < sourcePosition.x
+            ? Quaternion.Euler(0f, 180f, 0f)
+            : Quaternion.Euler(0f, 0f, 0f);
+    }
+
+    public virtual void SetTarget(Transform target) {
+        _player = target;
+    }
+
+    protected virtual void OnDrawGizmosSelected() {
+        Gizmos.color = Color.red;
+        Vector2 forward = _rb != null ? _rb.linearVelocity.normalized : transform.right;
+        if (forward == Vector2.zero) forward = transform.right;
+        Gizmos.DrawRay(transform.position, forward * _rayDistance);
+        Gizmos.DrawRay(transform.position, Quaternion.Euler(0, 0, 45) * forward * _rayDistance);
+        Gizmos.DrawRay(transform.position, Quaternion.Euler(0, 0, -45) * forward * _rayDistance);
     }
 }

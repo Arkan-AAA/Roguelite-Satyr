@@ -14,9 +14,11 @@ GameObject:
   - component: {fileID: 213234707059039587}
   - component: {fileID: 2872772794787544323}
   - component: {fileID: 5003621752648003860}
+  - component: {fileID: 5282466174200226238}
+  - component: {fileID: 1439398746186425179}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -117,6 +119,9 @@ MonoBehaviour:
   movingSpeed: 5
   _maxHealth: 100
   _damageCooldown: 1
+  _dashSpeed: 15
+  _dashDuration: 0.2
+  _dashCooldown: 1
 --- !u!114 &2872772794787544323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -143,6 +148,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Other.KnockBack
   _knockBackForce: 3
   _knockBackMovingTimerMax: 0.3
+--- !u!114 &5282466174200226238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4537925237600721237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37b876efb10bae26b9c0b3b5852c71f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponInventory
+  weapons:
+  - {fileID: 4563128978910980558}
+--- !u!114 &1439398746186425179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4537925237600721237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed8d74e52bec5742e8865f721c7fbab4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponInput
 --- !u!1 &4559563307930886263
 GameObject:
   m_ObjectHideFlags: 0
@@ -246,6 +277,7 @@ GameObject:
   - component: {fileID: 5499862933825480907}
   - component: {fileID: 3828805524331927756}
   - component: {fileID: 8133147870509844229}
+  - component: {fileID: 4529418007791008304}
   m_Layer: 0
   m_Name: PlayerVisual
   m_TagString: Untagged
@@ -362,6 +394,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 426cbfefee701bd5aa154e21d8314f0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisual
+  disableLook: 0
+--- !u!114 &4529418007791008304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5697640515791891352}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a11ad81fe55a4f3ab16e98ae04f46787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Misc.FlashBlink
+  blinkDuration: 0.2
+  blinkColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &6890910292200921307
 GameObject:
   m_ObjectHideFlags: 0
@@ -699,6 +746,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9490fd382bef3c4fa9f67c5731ea1139, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Sword
+  damageAmount: 10
+  attackDuration: 0.2
   _damageAmount: 10
 --- !u!60 &3774258509336630460
 PolygonCollider2D:

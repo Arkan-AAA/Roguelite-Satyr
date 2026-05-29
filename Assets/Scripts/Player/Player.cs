@@ -3,8 +3,7 @@ using System.Collections;
 using Other;
 using UnityEngine;
 
-public class Player : MonoBehaviour
-{
+public class Player : MonoBehaviour {
     public static Player Instance { get; private set; }
 
     [SerializeField]
@@ -47,8 +46,7 @@ public class Player : MonoBehaviour
     private Action _onAttackReleased;
     private Action _onDash;
 
-    private void Awake()
-    {
+    private void Awake() {
         Instance = this;
         rb = GetComponent<Rigidbody2D>();
         rb.freezeRotation = true;
@@ -57,8 +55,7 @@ public class Player : MonoBehaviour
         _dashDirection = Vector2.right;
     }
 
-    private void Start()
-    {
+    private void Start() {
         _canTakeDamage = true;
         _currentHealth = _maxHealth;
         _onAttack = (s, e) => ActiveWeapon.Instance.Attack();
@@ -72,13 +69,11 @@ public class Player : MonoBehaviour
         GameInput.Instance.OnPlayerDash += _onDash;
     }
 
-    private void FixedUpdate()
-    {
+    private void FixedUpdate() {
         HandleMovement();
     }
 
-    public void TakeDamage(Transform damageSource, int damage)
-    {
+    public void TakeDamage(Transform damageSource, int damage) {
         if (_isDead || !_canTakeDamage)
             return;
         _canTakeDamage = false;
@@ -91,59 +86,58 @@ public class Player : MonoBehaviour
         DetectDeath();
     }
 
-    private void DetectDeath()
-    {
-        if (_currentHealth == 0)
-        {
+    public bool IsDead { get; private set; } = false;
+
+    private void DetectDeath() {
+        if (_currentHealth == 0) {
             _isDead = true;
             _canTakeDamage = false;
-            ActiveWeapon.Instance.gameObject.SetActive(false);
+            if (ActiveWeapon.Instance != null) {
+                ActiveWeapon.Instance.gameObject.SetActive(false);
+            }
             _knockBack.StopKnockBackMovement();
             playerVisual.SetDead();
+
+            // Вызываем GameOver через GameManager
+            GameManager.Instance?.GameOver();
+
             StartCoroutine(DestroyAfterDeath());
         }
     }
 
-    private IEnumerator DestroyAfterDeath()
-    {
-        yield return new WaitForSeconds(2f);
+    private IEnumerator DestroyAfterDeath() {
+        yield return new WaitForSecondsRealtime(2f);
         Destroy(gameObject);
     }
 
-    private void OnDestroy()
-    {
+    private void OnDestroy() {
         GameInput.Instance.OnPlayerAttack -= _onAttack;
         GameInput.Instance.OnPlayerAttackHeld -= _onAttackHeld;
         GameInput.Instance.OnPlayerAttackReleased -= _onAttackReleased;
         GameInput.Instance.OnPlayerDash -= _onDash;
     }
 
-    private IEnumerator DamageCooldown()
-    {
+    private IEnumerator DamageCooldown() {
         yield return new WaitForSeconds(_damageCooldown);
         _canTakeDamage = true;
     }
 
-    private void HandleMovement()
-    {
+    private void HandleMovement() {
         if (_isDead || _knockBack.IsGettingKnockedBack || _isDashing)
             return;
         Vector2 inputVector = GameInput.Instance.GetMovementVector();
         rb.MovePosition(rb.position + inputVector * (movingSpeed * Time.fixedDeltaTime));
 
-        if (Mathf.Abs(inputVector.x) > minMovingSpeed || Mathf.Abs(inputVector.y) > minMovingSpeed)
-        {
+        if (Mathf.Abs(inputVector.x) > minMovingSpeed || Mathf.Abs(inputVector.y) > minMovingSpeed) {
             isRunning = true;
             _dashDirection = inputVector;
         }
-        else
-        {
+        else {
             isRunning = false;
         }
     }
 
-    private IEnumerator Dash()
-    {
+    private IEnumerator Dash() {
         if (!_canDash || _dashDirection == Vector2.zero || _isDead)
             yield break;
 
@@ -162,13 +156,11 @@ public class Player : MonoBehaviour
         _canDash = true;
     }
 
-    public bool IsRunning()
-    {
+    public bool IsRunning() {
         return isRunning;
     }
 
-    public Vector3 GetPlayerScreenPosition()
-    {
+    public Vector3 GetPlayerScreenPosition() {
         Vector3 playerScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
         return playerScreenPosition;
     }

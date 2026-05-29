@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1969910682433922558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2864534016764523591}
+  - component: {fileID: 5442287599269259367}
+  m_Layer: 0
+  m_Name: LevelGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2864534016764523591
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969910682433922558}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5442287599269259367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969910682433922558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2826459ac4cdbe1088533df60a83926, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelGeneration.DungeonGenerator
+  targetRoomCount: 5
+  floorIndex: 0
+  seed: 0
+  useRandomSeed: 1
+  startRoomData: {fileID: 11400000, guid: eed469db773a824c6bfe299f09b19307, type: 2}
+  bossRoomData: {fileID: 11400000, guid: 08180c06003761d1d916c9f487fa0e9d, type: 2}
+  combatRooms:
+  - {fileID: 11400000, guid: 08180c06003761d1d916c9f487fa0e9d, type: 2}
+  specialRooms: []
+  roomSpacing: {x: 26, y: 26}
+  corridorHorizontalPrefab: {fileID: 452664341366213992, guid: 6a1fb7cfcfe30f2e0ba1577fc2f9915b, type: 3}
+  corridorVerticalPrefab: {fileID: 7539962175517704592, guid: 549f848860bf2545b98d78d0ae01e110, type: 3}
+  doorBlockerPrefab: {fileID: 0}
+  navMeshSurface: {fileID: 0}
+  bakeNavMeshOnGenerate: 1
+  navMeshBakeDelay: 0.5

@@ -5,12 +5,15 @@ using UnityEngine;
 public class ActiveWeapon : MonoBehaviour {
     public static ActiveWeapon Instance { get; private set; }
 
-    [SerializeField]
-    private Weapon currentWeapon;
+    [SerializeField] private Weapon currentWeapon; // можно убрать сериализацию
 
     private void Awake() => Instance = this;
 
     public Weapon GetActiveWeapon() => currentWeapon;
+
+    public void SetWeapon(Weapon weapon) {
+        currentWeapon = weapon;
+    }
 
     public void Attack() {
         if (currentWeapon != null)
@@ -33,7 +36,6 @@ public class ActiveWeapon : MonoBehaviour {
 
     private void FollowLookDirection() {
         float lookX = LookDirectionHelper.GetLookX();
-
         if (lookX < 0f)
             transform.localScale = new Vector3(-1f, 1f, 1f);
         else if (lookX > 0f)
