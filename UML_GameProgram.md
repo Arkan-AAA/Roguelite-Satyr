@@ -359,9 +359,3 @@ classDiagram
 
 ### MobSpawner
 - `OnPlayerEnteredRoom()`, `SpawnMobsInRoom()`, `SpawnBoss()`, `GetValidSpawnPointsInRoom()`
-
-## 4. Как использовать диаграмму
-
-- Если хотите, я могу дальше превратить этот файл в **PNG/PDF**,
-- или сделать **упрощённую версию только для ядра игры**,
-- или отдельно нарисовать **UML для сцены `Player`, `EnemyAI`, `LevelGenerator`**.
