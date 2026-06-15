@@ -10,6 +10,14 @@
 
 This project was developed as a **bachelor's diploma thesis** with a focus on game architecture, procedural generation, and AI-driven enemy behavior.
 
+## Screenshots
+
+<img width="1920" height="1080" alt="2026-06-02-015853_hyprshot" src="https://github.com/user-attachments/assets/878c5265-44f2-4a88-985b-822c211b0071" />
+
+<img width="1920" height="1080" alt="2026-06-02-020106_hyprshot" src="https://github.com/user-attachments/assets/900d2b0f-f4d8-4b01-855e-4b55968e45e1" />
+
+<img width="1919" height="1080" alt="2026-06-02-015858_hyprshot" src="https://github.com/user-attachments/assets/54f80e5f-4111-4bea-ad8e-71db40589cd7" />
+
 ---
 
 ## Gameplay Features
