@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
-public class GameInput : MonoBehaviour {
+public class GameInput : MonoBehaviour
+{
     public static GameInput Instance { get; private set; }
 
     private PlayerInputActions playerInputActions;
@@ -18,7 +19,8 @@ public class GameInput : MonoBehaviour {
     public event Action OnPause;
     public event Action OnInventory;
 
-    private void Awake() {
+    private void Awake()
+    {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
@@ -40,7 +42,8 @@ public class GameInput : MonoBehaviour {
         playerInputActions.Player.Inventory.performed += _ => OnInventory?.Invoke();
     }
 
-    private void PlayerAttack_started(InputAction.CallbackContext obj) {
+    private void PlayerAttack_started(InputAction.CallbackContext obj)
+    {
         OnPlayerAttack?.Invoke(this, EventArgs.Empty);
     }
 
@@ -57,14 +60,14 @@ public class GameInput : MonoBehaviour {
     public void EnableUIInput() => playerInputActions.UI.Enable();
     public void DisableUIInput() => playerInputActions.UI.Disable();
 
-    /// <summary>Сбросить текущий выбранный объект в EventSystem.</summary>
-    public void ClearSelectedObject() {
+    public void ClearSelectedObject()
+    {
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
     }
 
-    /// <summary>Установить выбранный объект в EventSystem.</summary>
-    public void SetSelectedObject(GameObject obj) {
+    public void SetSelectedObject(GameObject obj)
+    {
         if (EventSystem.current != null && obj != null)
             EventSystem.current.SetSelectedGameObject(obj);
     }
